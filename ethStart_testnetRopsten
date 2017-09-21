@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+
+#---------------------------------------------------------------------
+
+readonly TEST_NETWORK=1
+readonly RPC_ENABLE=1
+# Inter process communication is enabled as default
+readonly IPC_DISABLE=1
+readonly CONSOLE_MODE=1
+
+
+
+
+readonly HOME_DIR="/home/m_eth"
+readonly GETH_DIR="${HOME_DIR}/eth_wallets/go-ethereum"
+readonly LOGS_DIR="${HOME_DIR}/geth_logs/log00.dat"
+
+# 0=silenct, 1=error, 2=warn, 3=info, 4=core, 5=debug, 6=debug detail
+readonly VERBOSITY=4
+
+#---------------------------------------------------------------------
+
+declare -a geth_options=("")
+
+
+# append verbosity level	
+geth_options=("${geth_options[@]}" "--verbosity ${VERBOSITY}")
+
+if [[ ${IPC_DISABLE} == 1 ]]
+then
+	# append --ipcdisable option to array	
+	geth_options=(${geth_options[@]} "--ipcdisable")
+fi
+
+if [[ ${RPC_ENABLE} == 1 ]]
+then
+	# RPC options
+	rpcPort="8882"
+	rpcCorsDomain="localhost"
+	rpcAPI="web3,db,net,eth"
+
+	# append rpc options
+	geth_options=(${geth_options[@]}		\
+		"--rpc"					\
+		"--rpcport=${rpcPort}"			\
+		"--rpccorsdomain=${rpcCorsDomain}"	\
+		"--rpcapi=${rpcAPI}"			\
+		)
+fi
+
+if [[ ${TEST_NETWORK} == 1 ]]
+then
+	networkID=3 	# Ropsten testnet
+
+	# append testnet options
+	geth_options=(${geth_options[@]}		\
+		"--testnet" 				\
+		"--networkid=$networkID" 		\
+		)
+
+
+fi
+
+if [[ ${CONSOLE_MODE} == 1 ]]
+then
+	geth_options=(${geth_options[@]} "console")
+fi
+
+#---------------------------------------------------------------------
+
+echo "Geth options summary: ${geth_options[@]}"
+
+"${GETH_DIR}/build/bin/geth" "${geth_options[@]}" 2>>${LOGS_DIR}
+
