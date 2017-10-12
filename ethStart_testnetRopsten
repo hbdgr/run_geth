@@ -6,12 +6,17 @@ set -o nounset
 #---------------------------------------------------------------------
 
 readonly TEST_NETWORK=1
+
 readonly RPC_ENABLE=0
+# RPC options
+readonly rpcPort="8882"
+readonly rpcCorsDomain="localhost"
+
 # Inter process communication is enabled as default
 readonly IPC_DISABLE=0
 readonly IPCFILE_PATH="/home/m_eth/ipc/geth.ipc"
 
-readonly CONSOLE_MODE=1
+readonly CONSOLE_MODE=0
 
 
 
@@ -32,8 +37,11 @@ geth_options=("${geth_options[@]}" "--verbosity ${VERBOSITY}")
 
 if [[ ${IPC_DISABLE} == 0 ]]
 then
-	geth_options=(${geth_options[@]}	\
-		"--ipcpath ${IPCFILE_PATH}"		\
+	# default admin,debug,eth,miner,net,personal,shh,txpool,web3
+	ipcAPI="admin,debug,eth,miner,net,web3"
+	geth_options=("${geth_options[@]}"	\
+		"--ipcpath ${IPCFILE_PATH}"	\
+		"--ipcapi ${ipcAPI}"		\
 	)
 else
 	# append --ipcdisable option to array	
@@ -45,13 +53,11 @@ fi
 
 if [[ ${RPC_ENABLE} == 1 ]]
 then
-	# RPC options
-	rpcPort="8882"
-	rpcCorsDomain="localhost"
+	# RPC additional options
 	rpcAPI="web3,db,net,eth"
 
 	# append rpc options
-	geth_options=(${geth_options[@]}		\
+	geth_options=("${geth_options[@]}"		\
 		"--rpc"					\
 		"--rpcport=${rpcPort}"			\
 		"--rpccorsdomain=${rpcCorsDomain}"	\
@@ -64,7 +70,7 @@ then
 	networkID=3 	# Ropsten testnet
 
 	# append testnet options
-	geth_options=(${geth_options[@]}		\
+	geth_options=("${geth_options[@]}"		\
 		"--testnet" 				\
 		"--networkid=$networkID" 		\
 		)
@@ -72,18 +78,13 @@ then
 
 fi
 
-#if [[ ${CONSOLE_MODE} == 1 ]]
-#then
-#	geth_options=(${geth_options[@]} "console")
-#fi
-
 #---------------------------------------------------------------------
 
 echo "Geth options summary: ${geth_options[@]}"
 
 "${GETH_DIR}/build/bin/geth" "${geth_options[@]}" 2>>${LOGS_DIR} &
 GETH_PROC_ID=$!
-echo "proces id: $GETH_PROC_ID"
+echo "process id: $GETH_PROC_ID"
 
 
 # setting permission for ipc file
@@ -101,8 +102,26 @@ fi
 
 
 # Re-attach geth console
-"${GETH_DIR}/build/bin/geth" "attach" "ipc:/${IPCFILE_PATH}"
+if [[ ${CONSOLE_MODE} == 1 ]]
+then
+	if [[ ${IPC_DISABLE} == 0 ]]
+	then
+		"${GETH_DIR}/build/bin/geth" "attach" "ipc:/${IPCFILE_PATH}"
+	else
+		"${GETH_DIR}/build/bin/geth" "attach" "http://localhost:${rpcPort}"
+	fi
+fi
 
-kill -9 "$GETH_PROC_ID" >/dev/null 2>&1;
-echo "Background geth processes have exited."
 
+while :
+do
+	echo ""
+	read -n1 -r -p "Press 'q' to kill geth and exit..." key
+
+	if [ "$key" = 'q' ]; then
+		# kill geth instance
+		kill -9 "$GETH_PROC_ID" >/dev/null 2>&1;
+		printf "\nBackground geth processes have exited.\n"
+		break
+	fi
+done
