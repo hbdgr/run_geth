@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -o errexit
+# we want to kill proccess at the end
+# set -o errexit
 set -o nounset
 
 #---------------------------------------------------------------------
@@ -16,8 +17,9 @@ readonly rpcCorsDomain="localhost"
 readonly IPC_DISABLE=0
 readonly IPCFILE_PATH="/home/m_eth/ipc/geth.ipc"
 
-readonly CONSOLE_MODE=0
+readonly CONSOLE_MODE=1
 
+readonly MINING_MODE=1
 
 
 readonly HOME_DIR="/home/m_eth"
@@ -39,9 +41,9 @@ if [[ ${IPC_DISABLE} == 0 ]]
 then
 	# default admin,debug,eth,miner,net,personal,shh,txpool,web3
 	ipcAPI="admin,debug,eth,miner,net,web3"
-	geth_options=("${geth_options[@]}"	\
+#		"--ipcapi=${ipcAPI}"
+	geth_options=(${geth_options[@]}	\
 		"--ipcpath ${IPCFILE_PATH}"	\
-		"--ipcapi ${ipcAPI}"		\
 	)
 else
 	# append --ipcdisable option to array	
@@ -57,7 +59,7 @@ then
 	rpcAPI="web3,db,net,eth"
 
 	# append rpc options
-	geth_options=("${geth_options[@]}"		\
+	geth_options=(${geth_options[@]}		\
 		"--rpc"					\
 		"--rpcport=${rpcPort}"			\
 		"--rpccorsdomain=${rpcCorsDomain}"	\
@@ -70,22 +72,35 @@ then
 	networkID=3 	# Ropsten testnet
 
 	# append testnet options
-	geth_options=("${geth_options[@]}"		\
+	geth_options=(${geth_options[@]}		\
 		"--testnet" 				\
 		"--networkid=$networkID" 		\
 		)
 
+fi
 
+if [[ ${MINING_MODE} == 1 ]]
+then
+	miner_threads=2
+	rwd_address="0x4283bc4327eae94f58a08689648f1d7c578156a0"  # Public address for block mining rewards
+
+	# append testnet options
+	geth_options=(${geth_options[@]}		\
+		"--mine" 				\
+		"--minerthreads=${miner_threads}" 	\
+		"--etherbase=${rwd_address}"		\
+		)
 fi
 
 #---------------------------------------------------------------------
 
-echo "Geth options summary: ${geth_options[@]}"
-
+echo "Geth command: ${GETH_DIR}/build/bin/geth  ${geth_options[@]}"
+set -x
 "${GETH_DIR}/build/bin/geth" "${geth_options[@]}" 2>>${LOGS_DIR} &
 GETH_PROC_ID=$!
 echo "process id: $GETH_PROC_ID"
 
+set +x
 
 # setting permission for ipc file
 if [[ ${IPC_DISABLE} == 0 ]]
@@ -106,7 +121,7 @@ if [[ ${CONSOLE_MODE} == 1 ]]
 then
 	if [[ ${IPC_DISABLE} == 0 ]]
 	then
-		"${GETH_DIR}/build/bin/geth" "attach" "ipc:/${IPCFILE_PATH}"
+		"${GETH_DIR}/build/bin/geth" "attach" "ipc://${IPCFILE_PATH}"
 	else
 		"${GETH_DIR}/build/bin/geth" "attach" "http://localhost:${rpcPort}"
 	fi
