@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
 # we want to kill proccess at the end
-# set -o errexit
+#set -o errexit
 set -o nounset
 
 #---------------------------------------------------------------------
 
 readonly GETH_PATH="${HOME}/eth_wallets/go-ethereum"
 readonly LOGS_PATH="${HOME}/geth_logs/log00.dat"
+readonly DATA_DIR="/media/usb_all/joy/mobile_geth/eth_datadir"
 
+readonly USE_BOOTNODES=1
 readonly TEST_NETWORK=1
 
 readonly RPC_ENABLE=0
@@ -19,6 +21,8 @@ readonly rpcCorsDomain="localhost"
 # Inter process communication is enabled as default
 readonly IPC_DISABLE=0
 readonly IPCFILE_PATH="${HOME}/ipc/geth.ipc"
+
+readonly NODISCOVER=0
 
 readonly CONSOLE_MODE=1
 
@@ -40,16 +44,33 @@ create_missing_dirs() {
 		mkdir -p $dir
 	fi
 }
-create_missing_dirs $LOGS_PATH
-create_missing_dirs $IPCFILE_PATH
+create_missing_dirs "$LOGS_PATH"
+create_missing_dirs "$IPCFILE_PATH"
+create_missing_dirs "$DATA_DIR"
 
 #---------------------------------------------------------------------
 
+# checking GETH_PATH - with version argument
+check_geth_path() {
+	printf "Checking Geth Path: "
+	if [[ -n $(${GETH_PATH}/build/bin/geth version | grep Geth) ]]
+	then
+		echo "$(${GETH_PATH}/build/bin/geth version)"
+		echo "OK"
+	else
+		echo "Fail to run Geth! Set correct GETH_PATH variable."
+		echo "exiting ..."
+		exit 1
+	fi
+}
+check_geth_path
+#---------------------------------------------------------------------
+
 #declare -a geth_options=("--syncmode full" " --cache 4096")
-declare -a geth_options=("--syncmode full" " --cache 2048")
+declare -a geth_options=("--syncmode fast" " --cache 512")
 
 
-# append verbosity level	
+# append verbosity level
 geth_options=("${geth_options[@]}" "--verbosity ${VERBOSITY}")
 
 if [[ ${IPC_DISABLE} == 0 ]]
@@ -61,7 +82,7 @@ then
 		"--ipcpath ${IPCFILE_PATH}"	\
 	)
 else
-	# append --ipcdisable option to array	
+	# append --ipcdisable option to array
 	geth_options=(${geth_options[@]}	\
 		"--ipcdisable"			\
 	)
@@ -82,17 +103,34 @@ then
 		)
 fi
 
+if [[ ${USE_BOOTNODES} == 1  ]]
+then
+	bootnodes="enode://256405c3af6b9369c84bb90927c99a1edabe061a62e3c7bec19f23e3c8ad6fea9cc5c47e174435bbb415852e344ad9d7bb61c158e69fb5f29f16cc787f85cf2c@92.111.252.195:63451,enode://27f7328ef96a15f6f47ddeba8ba2a50952e430a3f294bd0e479e47239123167ba67fb46057405b1baa1716ee8ef5cd58b982b241e82d1fd8f5891d77f1a84a51@85.223.209.56:51938,enode://42de7d88a5473d6317f1826ca87689b2b9566a2ece72da0c78d529b61295264b2aec8c13fc3e2d1f5d05fbfb0c2ab98af2c64a6f6fa9dc7236b28d97323d2ba4@136.62.220.147:30303,enode://6991bbef05ca85e9cb0cfab1b8f9427500bb004ff21edb189760d146bf5f37015202b565e0af752f2975f3f8bdc672ab8b39d378b0911874883ac70cdf23c83d@121.122.127.186:45534,enode://9e99e183b5c71d51deb16e6b42ac9c26c75cfc95fff9dfae828b871b348354cbecf196dff4dd43567b26c8241b2b979cb4ea9f8dae2d9aacf86649dafe19a39a@51.15.79.176:41462,enode://9eccca5941e191de1f43345c7bbcb8a0a77fe383329d5f85da72d445f72bb9561768118443604b474022ce7e9dc58779acc8486fb882801e61a800ca0c089930@140.112.238.158:37162,enode://f55d3f3a5e21bb4e0bcd046ccc880f4e79bddee570a9909c72de61470b48e0309d38460b28408c50d689cf4629a3bb0877f7556d142950cb3d3b3251ced405a1@52.212.59.171:30303"
+
+	geth_options=(${geth_options[@]}		\
+		"--bootnodes=$bootnodes"		\
+		)
+
+fi
+
 if [[ ${TEST_NETWORK} == 1 ]]
 then
 	networkID=3 	# Ropsten testnet
+
 
 	# append testnet options
 	geth_options=(${geth_options[@]}		\
 		"--testnet" 				\
 		"--networkid=$networkID" 		\
 		)
-
 fi
+
+
+if [[ ${NODISCOVER} == 1 ]]
+then
+	geth_options=(${geth_options[@]} "--nodiscover")
+fi
+
 
 if [[ ${MINING_MODE} == 1 ]]
 then
@@ -126,7 +164,7 @@ then
 	# add file to ipc-eth group
 	chown :ipc-eth "${IPCFILE_PATH}"
 
-	# add ipc-eth group write permission 
+	# add ipc-eth group write permission
 	chmod g+w "${IPCFILE_PATH}"
 fi
 
