@@ -5,34 +5,23 @@
 set -o nounset
 
 
-#---------------------------------------------------------------------
+# Absolute path to this script
+scriptpath=$(readlink -e "$0")
+# Absolute path this script is in
+scriptdir=$(dirname "$scriptpath")
 
-readonly GETH_PATH="${HOME}/eth_wallets/go-ethereum"
-readonly LOGS_PATH="${HOME}/geth_logs/log00.dat"
+conf_file="${scriptdir}/run_geth.conf"
 
-# leave empty string "" for default location '.ethereum'
-readonly DATA_DIR=""
-
-# 'fast', 'light' or 'full'
-readonly SYNCMODE='fast'
-readonly CACHE=5120
-readonly MAXPEERS=128
-
-readonly RPC_ENABLE=1
-# RPC options
-readonly rpcPort="8646"
-readonly rpcCorsDomain="localhost"
-
-# Interprocess communication is enabled as default
-readonly IPC_DISABLE=0
-readonly IPCFILE_PATH="${HOME}/ipc/geth.ipc"
-
-readonly NODISCOVER=0
-
-readonly CONSOLE_MODE=1
-
-readonly MINING_MODE=0
-readonly MINING_THREADS=4
+if [[ -e ${conf_file} ]]
+then
+	echo "Found confguration file: ${conf_file}"
+	# source variables from conf file
+	. "${scriptdir}/run_geth.conf"
+else
+	echo "Missing 'run_geth.conf' confguration file!"
+	echo "Create one based on run_geth.conf.default, in the same directory as this script."
+	exit 1
+fi
 
 
 # 0=silenct, 1=error, 2=warn, 3=info, 4=core, 5=debug, 6=debug detail
