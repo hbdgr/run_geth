@@ -195,11 +195,20 @@ GETH_PROC_ID=$!
 echo "process id: $GETH_PROC_ID"
 
 
+wait_for_ipc_file() {
+	while :
+	do
+		if [[ -n $(tail -n 15 "$LOGS_PATH" | grep "IPC endpoint opened") ]]; then
+			printf "geth.ipc file is ready.\n"
+			break;
+		fi
+	done
+}
+
 # setting permission for ipc file
-if [[ ${IPC_DISABLE} == 0 ]]
-then
+if [[ ${IPC_DISABLE} == 0 ]]; then
 	# wait for geth.ipc to be created
-	sleep 10
+	wait_for_ipc_file
 
 	# add file to ipc-eth group
 	chown :ipc-eth "${IPCFILE_PATH}"
