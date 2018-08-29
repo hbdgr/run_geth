@@ -52,7 +52,7 @@ USE_BOOTNODES=0
 # ropsten bootnodes
 BOOTNODES_ROPSTEN=""
 
-# frontier bootnodes
+# mainnet bootnodes
 BOOTNODES_MAIN=""
 ```
 

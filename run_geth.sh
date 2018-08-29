@@ -46,17 +46,17 @@ set_network() {
 	readonly ETH_NETWORK=$(get_network "$*")
 	if [[ ${ETH_NETWORK} == 3 ]]; then
 		echo "Setting 'ropsten' test network.."
-		networkID=3 	# Ropsten testnet
+		networkID=3   # Ropsten testnet
 
 		if [[ ${USE_BOOTNODES} == 1  ]]; then
 			bootnodes="${BOOTNODES_ROPSTEN}"
 		fi
 
 		# append testnet options
-		geth_options=(${geth_options[@]}	\
-			"--testnet"						\
-			"--networkid=$networkID"		\
-			"--bootnodes=$bootnodes"		\
+		geth_options=(${geth_options[@]} \
+			"--testnet" \
+			"--networkid=$networkID" \
+			"--bootnodes=$bootnodes" \
 			)
 	elif [[ ${ETH_NETWORK} == 0 ]]; then
 		echo "Setting 'main' ethereum network.."
@@ -64,9 +64,9 @@ set_network() {
 			bootnodes="${BOOTNODES_ROPSTEN}"
 		fi
 
-		# append bootnodes to Frontier networkId
-		geth_options=(${geth_options[@]}	\
-			"--bootnodes=$bootnodes"		\
+		# append bootnodes to mainnet networkId
+		geth_options=(${geth_options[@]} \
+			"--bootnodes=$bootnodes" \
 			)
 	else
 		if [[ "${ETH_NETWORK}" == "empty" ]]; then
@@ -120,13 +120,13 @@ configure_ipc() {
 	if [[ ${IPC_DISABLE} == 0 ]]; then
 		# default admin,debug,eth,miner,net,personal,shh,txpool,web3
 		ipcAPI="admin,debug,eth,miner,net,web3,personal"
-		geth_options=(${geth_options[@]}	\
-			"--ipcpath ${IPCFILE_PATH}"		\
+		geth_options=(${geth_options[@]} \
+			"--ipcpath ${IPCFILE_PATH}" \
 		)
 	else
 		# append --ipcdisable option to array
-		geth_options=(${geth_options[@]}	\
-			"--ipcdisable"					\
+		geth_options=(${geth_options[@]} \
+			"--ipcdisable" \
 		)
 	fi
 }
@@ -137,11 +137,11 @@ configure_rpc() {
 		rpcAPI="web3,db,net,eth"
 
 		# append rpc options
-		geth_options=(${geth_options[@]}			\
-			"--rpc"									\
-			"--rpcport=${RPC_PORT}"					\
-			"--rpccorsdomain=${RPC_CORS_DOMAIN}"	\
-			"--rpcapi=${rpcAPI}"					\
+		geth_options=(${geth_options[@]} \
+			"--rpc" \
+			"--rpcport=${RPC_PORT}" \
+			"--rpccorsdomain=${RPC_CORS_DOMAIN}" \
+			"--rpcapi=${rpcAPI}" \
 			)
 	fi
 }
@@ -158,10 +158,10 @@ configure_mining() {
 		rwd_address="0x4283bc4327eae94f58a08689648f1d7c578156a0"  # Public address for block mining rewards
 
 		# append testnet options
-		geth_options=(${geth_options[@]}		\
-			"--mine"							\
-			"--minerthreads=${MINING_THREADS}"	\
-			"--etherbase=${rwd_address}"		\
+		geth_options=(${geth_options[@]} \
+			"--mine" \
+			"--minerthreads=${MINING_THREADS}" \
+			"--etherbase=${rwd_address}" \
 			)
 	fi
 }
