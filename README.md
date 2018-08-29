@@ -1,3 +1,14 @@
+# run geth
+
+A small script that makes starting geth easier.
+
+## configure
+Instead of adding an endless line of options directly to the geth during each run,
+script requires ```run_geth.conf``` configuration file, that can be easily managed.
+
+
+**example (```run_geth.conf.default```):**
+```
 GETH_PATH="/home/user/eth/geth/build/bin/geth"
 LOGS_PATH="/home/user/eth/logs/geth.log"
 
@@ -43,4 +54,14 @@ BOOTNODES_ROPSTEN=""
 
 # frontier bootnodes
 BOOTNODES_MAIN=""
+```
 
+## run
+Mainnet:
+```
+$ ./run_geth main
+```
+Ropsten testnet:
+```
+$ ./run_geth ropsten
+```
