@@ -154,14 +154,12 @@ configure_nodiscover() {
 
 configure_mining() {
 	if [[ ${MINING_MODE} == 1 ]]; then
-		miner_threads=3
-		rwd_address="0x4283bc4327eae94f58a08689648f1d7c578156a0"  # Public address for block mining rewards
-
 		# append testnet options
 		geth_options=(${geth_options[@]} \
 			"--mine" \
 			"--minerthreads=${MINING_THREADS}" \
-			"--etherbase=${rwd_address}" \
+			"--targetgaslimit=${TARGET_GASLIMIT}" \
+			"--etherbase=${REWARD_ADDRESS}" \
 			)
 	fi
 }
@@ -193,7 +191,7 @@ wait_for_ipc_file() {
 	echo 'waiting for IPC endpoint...'
 	while :
 	do
-		if [[ -n $(tail -n 15 "$LOGS_PATH" | grep "IPC endpoint opened") ]]; then
+		if [[ -n $(tail -n 20 "$LOGS_PATH" | grep "IPC endpoint opened") ]]; then
 			printf "geth.ipc file is ready.\n"
 			break;
 		fi
