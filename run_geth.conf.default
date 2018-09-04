@@ -28,20 +28,21 @@ IPCFILE_PATH="/home/user/eth/ipc/geth.ipc"
 # Set 1, if you do not want geth to find new peers
 NODISCOVER=0
 
+
 # attach console
 CONSOLE_MODE=1
+
 
 # CPU mining
 MINING_MODE=0
 MINING_THREADS=4
-REWARD_ADDRESS=
+REWARD_ADDRESS="0xProvide_your_eth_reward_address"
 TARGET_GASLIMIT=10000000
 
-USE_BOOTNODES=0
 
+USE_BOOTNODES=0
 # ropsten bootnodes
 BOOTNODES_ROPSTEN=""
-
 # mainnet bootnodes
 BOOTNODES_MAIN=""
 
